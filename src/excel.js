@@ -17,10 +17,10 @@ class Excel
 			switch (entry.path)
 			{
 				case 'xl/workbook.xml': 
-					this.sheets = await this.parseSheet(entry);
+					this.sheets = await parseSheet(entry);
 					break;
 				case 'xl/_rels/workbook.xml.rels': 
-					this.rels = await this.parseRels(entry);
+					this.rels = await parseRels(entry);
 					break;
 			}
 			entry.autodrain();
@@ -34,41 +34,41 @@ class Excel
 			resolve(this);
 		});
 	});
-	parseSheet = entry => new Promise(resolve =>
-	{
-		const sheets = [];
-		parseSax(entry)
-		.on('node', node =>
-		{
-			if (node.path === 'workbook/sheets/sheet')
-			{
-				const { name, sheetId, 'r:id': rId } = node.attributes;
-				sheets.push({ name, sheetId, rId });
-			}
-		})
-		.on('end', () =>
-		{
-			resolve(sheets);
-		});
-	});
-	parseRels = entry => new Promise(resolve =>
-	{
-		const rels = {};
-		parseSax(entry)
-		.on('node', node =>
-		{
-			if (node.path === 'Relationships/Relationship')
-			{
-				const { Id: id, Target: entry } = node.attributes;
-				rels[id] = entry;
-			}
-		})
-		.on('end', () =>
-		{
-			resolve(rels);
-		});
-	});
 }
+const parseSheet = entry => new Promise(resolve =>
+{
+	const sheets = [];
+	parseSax(entry)
+	.on('node', node =>
+	{
+		if (node.path === 'workbook/sheets/sheet')
+		{
+			const { name, sheetId, 'r:id': rId } = node.attributes;
+			sheets.push({ name, sheetId, rId });
+		}
+	})
+	.on('end', () =>
+	{
+		resolve(sheets);
+	});
+});
+const parseRels = entry => new Promise(resolve =>
+{
+	const rels = {};
+	parseSax(entry)
+	.on('node', node =>
+	{
+		if (node.path === 'Relationships/Relationship')
+		{
+			const { Id: id, Target: entry } = node.attributes;
+			rels[id] = entry;
+		}
+	})
+	.on('end', () =>
+	{
+		resolve(rels);
+	});
+});
 const parseSax = entry =>
 {
 	const strict = true;  
